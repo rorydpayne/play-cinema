@@ -1,10 +1,16 @@
 package models;
 
+import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 
 import com.mongodb.*;
+import org.bson.BSONObject;
+import scala.util.parsing.json.JSONArray;
+import scala.util.parsing.json.JSONObject;
 
 
 /**
@@ -32,7 +38,6 @@ public class Showing {
 
     }
 
-
     public Showing(String movie_title,
                    String[] director,
                    String[] cast,
@@ -44,46 +49,185 @@ public class Showing {
                    String img_url,
                    Map<String, Double> prices,
                    Map<String, Object[]> time_and_date) {
-        this.movie_title=movie_title;
-        this.director=director;
-        this.cast=cast;
-        this.release_date=release_date;
-        this.running_length=running_length;
-        this.age_rating=age_rating;
-        this.age_rating_img_url=age_rating_img_url;
-        this.synopsis=synopsis;
-        this.img_url=img_url;
-        this.prices=prices;
-        this.time_and_date=time_and_date;
+        this.movie_title = movie_title;
+        this.director = director;
+        this.cast = cast;
+        this.release_date = release_date;
+        this.running_length = running_length;
+        this.age_rating = age_rating;
+        this.age_rating_img_url = age_rating_img_url;
+        this.synopsis = synopsis;
+        this.img_url = img_url;
+        this.prices = prices;
+        this.time_and_date = time_and_date;
     }
 
-//    public static List<Showing> all() {
-//        return Showing.collection.find().toArray();
-//    }
+    /*
+        below follows the RUD methods for the play API. Creation is dealt with
+        directly with a mongo shell
+     */
+    // Display the JSON required for filmList page as string
+    public static void listView() {
+        MongoProcess mp = new MongoProcess();
+        DBCollection coll = mp.db.getCollection("showings");
 
-    public static String listView() {
-        try {
-            MongoClient mongoClient = new MongoClient("localhost", 27017);
+        BasicDBObject keys = new BasicDBObject();
+        keys.put("movie_title", 1);
+        keys.put("img_url", 1);
+        keys.put("synopsis", 1);
+        keys.put("_id", 0);
+        DBCursor all = coll.find(null, keys);
+        String list = all.toArray().toString();
+    }
 
-            DB db = mongoClient.getDB("cinema");
+    // Display the JSON required for filmDetail page as String
+    public static void detailViewByUrl(String MovieUrl) {
+        MongoProcess mp = new MongoProcess();
+        DBCollection coll = mp.db.getCollection("showings");
 
-            DBCollection coll= db.getCollection("showings");
+        BasicDBObject query = new BasicDBObject();
+        query.put("url", MovieUrl);
 
-            BasicDBObject keys = new BasicDBObject();
-            keys.put("movie_title",1);
-            keys.put("running_length",1);
-            keys.put("age_rating",1);
-            keys.put("img_url",1);
-            keys.put("synopsis",1);
-            keys.put("_id", 0);
-            DBCursor all = coll.find(null, keys);
+        BasicDBObject fields = new BasicDBObject();
+        fields.put("movie_title", 1);
+        fields.put("img_url", 1);
+        fields.put("director", 1);
+        fields.put("cast", 1);
+        fields.put("release_date", 1);
+        fields.put("running_length", 1);
+        fields.put("synopsis", 1);
+        fields.put("_id", 0);
 
-            return all.toArray().toString();
+        DBCursor cursor = coll.find(query, fields);
 
+        String returnRecord = "";
+
+        while (cursor.hasNext()) {
+            returnRecord = cursor.next().toString();
         }
-        catch (Exception e) {
-            return "oops" + e;
+    }
+
+    public static List<String> getTitles() {
+        List<String> titles = new ArrayList<String>();
+        MongoProcess mp = new MongoProcess();
+        DBCollection coll = mp.db.getCollection("showings");
+
+        BasicDBObject fields = new BasicDBObject();
+        fields.put("movie_title", 1);
+        fields.put("_id", 0);
+        DBCursor all = coll.find(null, fields);
+        List<DBObject> dbList = all.toArray();
+        for (int i=0; i<dbList.size(); i++) {
+            String title = dbList.get(i).toString();
+            titles.add(title);
         }
+        return titles;
+    }
+
+    public static List<Opportunity> getOpportunities(String MovieUrl) {
+        List<Opportunity> opportunities= new ArrayList<Opportunity>();
+
+        MongoProcess mp = new MongoProcess();
+        DBCollection coll = mp.db.getCollection("showings");
+
+        BasicDBObject query = new BasicDBObject();
+        query.put("url", MovieUrl);
+
+        BasicDBObject fields = new BasicDBObject();
+        fields.put("Opportunities", 1);
+        fields.put("_id", 0);
+
+        DBCursor cursor = coll.find(query, fields);
+
+        while (cursor.hasNext()) {
+            DBObject dbo = cursor.next();
+            BasicDBList dbList = (BasicDBList)dbo.get("Opportunities");
+            for (int i=0; i<dbList.size(); i++) {
+                Opportunity opportunity = (Opportunity)dbList.get(i);
+                opportunities.add(opportunity);
+            }
+        }
+        return opportunities;
+    }
+
+    public static List<String> getDates(String MovieUrl) {
+                List<String> dates = new ArrayList<String>();
+                List<Opportunity> opportunities = getOpportunities(MovieUrl);
+                for (int i=0; i<opportunities.size(); i++) {
+                    String date = opportunities.get(i).getDate();
+                    dates.add(date);
+        }
+        return dates;
+    }
+
+    public static List<WhenWhere> getWhenWheres(String MovieUrl, String date) {
+        List<WhenWhere> whenWheres= new ArrayList<WhenWhere>();
+        List<Opportunity> opportunities= getOpportunities(MovieUrl);
+        for (int i=0;i<opportunities.size();i++) {
+            if (opportunities.get(i).getDate() == date) {
+                WhenWhere whenwhere = opportunities.get(i).getWhenWhere();
+                whenWheres.add(whenwhere);
+            }
+        }
+        return whenWheres;
+    }
+
+    public static List<String> getTimes(String MovieUrl, String date) {
+        List<String> times = new ArrayList<String>();
+        List<WhenWhere> whenWheres= getWhenWheres(MovieUrl, date);
+        for (int i=0;i<whenWheres.size();i++) {
+            String time = whenWheres.get(i).getTime();
+            times.add(time);
+        }
+        return times;
+    }
+
+    public static int getScreen(String MovieUrl, String date, String time) {
+        int screen = 0;
+        List<WhenWhere> whenWheres= getWhenWheres(MovieUrl, date);
+        for (int i=0;i<whenWheres.size();i++) {
+            if (whenWheres.get(i).getTime() == time) {
+                screen = whenWheres.get(i).getScreen();
+            }
+        }
+        return screen;
+    }
+
+    public static int getTicketsBooked(String MovieUrl, String date, String time) {
+        int tickets = 0;
+        List<WhenWhere> whenWheres= getWhenWheres(MovieUrl, date);
+        for (int i=0;i<whenWheres.size();i++) {
+            if (whenWheres.get(i).getTime() == time) {
+                tickets = whenWheres.get(i).getTickets_booked();
+            }
+        }
+        return tickets;
+    }
+
+    public static int getScreenCapacity(int screenNumber) {
+        int capacity = 0;
+
+        MongoProcess mp = new MongoProcess();
+        DBCollection coll = mp.db.getCollection("screens");
+
+        BasicDBObject query = new BasicDBObject();
+        query.put("number", screenNumber);
+
+        BasicDBObject fields = new BasicDBObject();
+        fields.put("capacity", 1);
+        fields.put("_id", 0);
+
+        DBCursor cursor = coll.find(query, fields);
+
+        while (cursor.hasNext()) {
+            capacity = Integer.parseInt(cursor.next().toString());
+        }
+        return capacity;
+    }
+
+    public static void updateSalesData() {
+        updateTicketsBooked();
+        updateTotalTicketsBookedPerFilm();
     }
 
 }

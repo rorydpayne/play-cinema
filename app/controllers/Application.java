@@ -11,13 +11,15 @@ public class Application extends Controller {
 
 
     public static Result index() {
-
-        return ok(Showing.listView());
+        return redirect(routes.Application.getListView());
     }
 
-    public static Result showdb() {
-        return ok();
+    public static Result getListView() {
+        //return ok(Showing.listView());
+        return ok(Showing.detailViewByUrl("the-dark-knight"));
     }
 
-
+    public static Result getDetailView(String showingUrl) {
+        return ok(Showing.detailViewByUrl(showingUrl));
+    }
 }

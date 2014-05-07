@@ -5,7 +5,12 @@
 # Home page
 GET     /                           controllers.Application.index()
 
-GET     /showdb                           controllers.Application.showdb()
+# display page info
+GET     /films                           controllers.Application.getListView()
+GET     /films/:showingUrl                controllers.Application.getDetailView(showingUrl: String)
+
+# booking
+
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)
