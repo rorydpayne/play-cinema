@@ -10,7 +10,12 @@ import views.html.*;
 
 public class Application extends Controller {
 
-
+    public static Result preflight(String all) {
+        response().setHeader(ACCESS_CONTROL_ALLOW_ORIGIN, "*");
+        response().setHeader(ACCESS_CONTROL_ALLOW_METHODS, "GET, POST, PUT, DELETE, OPTIONS");
+        response().setHeader(ACCESS_CONTROL_ALLOW_HEADERS, "Accept, Origin, Content-Type, X-Json, X-Prototype-Version, X-Requested-With, Referer, User-Agent");
+        return ok();
+    }
     public static Result index() {
         return redirect(routes.Application.getListView());
     }
@@ -18,7 +23,6 @@ public class Application extends Controller {
     public static Result getListView() {
         return ok(Showing.listView()).as("application/json");
     }
-
 //
 //        Showing.updateTicketsBooked(4,"pulp-fiction", "Friday 1st August", "1pm");
 //        String listView = Showing.listView();
@@ -48,8 +52,19 @@ public class Application extends Controller {
 //        );
 //    }
 
-    public static Result getDetailView(String showingUrl) {
-        return TODO;
-        //return ok(Showing.detailViewByUrl(showingUrl));
+    public static Result getDetailView(String showingId) {
+        return ok(Showing.detailViewByUrl(showingId)).as("application/json");
+    }
+
+    public static Result getTitles() {
+        return ok(Showing.getTitles().toString()).as("application/json");
+    }
+
+    public static Result getOpportunities(String movie_url) {
+        return ok(Showing.getOpportunities(movie_url)).as("application/json");
+    }
+
+    public static Result getPrices() {
+        return ok(Showing.getTicketPrices()).as("application/json");
     }
 }

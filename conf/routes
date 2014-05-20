@@ -6,11 +6,14 @@
 GET     /                           controllers.Application.index()
 
 # display page info
-GET     /films                           controllers.Application.getListView()
-GET     /films/:showingUrl                controllers.Application.getDetailView(showingUrl: String)
+GET     /showings                           controllers.Application.getListView()
+GET     /showings/film             controllers.Application.getDetailView(showingId: String)
 
 # booking
-
+#GET     /films
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)
+
+
+OPTIONS /*all                       controllers.Application.preflight(all: String)
