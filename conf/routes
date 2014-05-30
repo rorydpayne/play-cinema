@@ -3,17 +3,19 @@
 # ~~~~
 
 # Home page
-GET     /                           controllers.Application.index()
+GET            /                     controllers.Application.index()
 
 # display page info
-GET     /showings                           controllers.Application.getListView()
-GET     /showings/film             controllers.Application.getDetailView(showingId: String)
-
+GET            /showings             controllers.Application.getListView()
+GET            /showings/film        controllers.Application.getDetailView(showingId: String)
+GET            /opportunities        controllers.Application.getOpportunities(showingId: String)
+GET            /times                controllers.Application.getTimes(showingId: String, date: String)
+GET            /tickets              controllers.Application.getPrices()
 # booking
 #GET     /films
 
 # Map static resources from the /public folder to the /assets URL path
-GET     /assets/*file               controllers.Assets.at(path="/public", file)
+GET            /assets/*file         controllers.Assets.at(path="/public", file)
 
 
-OPTIONS /*all                       controllers.Application.preflight(all: String)
+OPTIONS        /*all                 controllers.Application.preflight(all: String)

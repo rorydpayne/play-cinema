@@ -129,14 +129,14 @@ public class Showing {
         return titles;
     }
 
-    public static String getOpportunities(String MovieUrl) {
+    public static String getOpportunities(String movieUrl) {
         String opportunities= "";
 
         MongoProcess mp = new MongoProcess();
         DBCollection coll = mp.db.getCollection("showings");
 
         BasicDBObject query = new BasicDBObject();
-        query.put("url", MovieUrl);
+        query.put("url", movieUrl);
 
         BasicDBObject fields = new BasicDBObject();
         fields.put("opportunities", 1);
@@ -150,6 +150,36 @@ public class Showing {
             opportunities = dbList.toString();
         }
         return opportunities;
+    }
+
+    public static String getTimes(String movieUrl, String date) {
+        List<String> times = new ArrayList<String>();
+
+        MongoProcess mp = new MongoProcess();
+        DBCollection coll = mp.db.getCollection("showings");
+
+        BasicDBObject query = new BasicDBObject();
+        query.put("url",movieUrl);
+        query.put("opportunities.date", date);
+
+        BasicDBObject fields = new BasicDBObject();
+        fields.put("opportunities", 1);
+        fields.put("_id", 0);
+
+        DBCursor cursor = coll.find(query, fields);
+
+        while (cursor.hasNext()) {
+            DBObject dbo = cursor.next();
+            BasicDBList dbList = (BasicDBList)dbo.get("opportunities");
+            for(int i = 0; i<dbList.size(); i++) {
+                String item = dbList.get(i).toString();
+                if (item.contains(date)) {
+                    times.add(item);
+                }
+            }
+        }
+
+        return times.toString();
     }
 
 

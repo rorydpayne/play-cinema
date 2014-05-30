@@ -56,6 +56,10 @@ public class Application extends Controller {
         return ok(Showing.detailViewByUrl(showingId)).as("application/json");
     }
 
+    public static Result getTimes(String showingId, String date) {
+        return ok(Showing.getTimes(showingId, date)).as("application/json");
+    }
+
     public static Result getTitles() {
         return ok(Showing.getTitles().toString()).as("application/json");
     }
